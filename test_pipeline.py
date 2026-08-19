@@ -1,9 +1,11 @@
-"""
-Test OCR and Stock Count Parser on sample image
-"""
-
+import sys
 import json
 from pathlib import Path
+
+# Ensure UTF-8 output on Windows consoles
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
+
 from engine.paddle_vl_engine import get_ocr_engine
 from engine.stock_count_parser import StockCountParser
 from engine.exporter import StockCountExporter

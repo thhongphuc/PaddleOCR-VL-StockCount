@@ -1,7 +1,11 @@
+import sys
 import urllib.request
 import urllib.parse
 import json
 import time
+
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
 
 for sample_id in ["sample_2_electronics", "sample_3_pharma"]:
     print(f"\n--- Testing /api/scan with {sample_id} ---")
