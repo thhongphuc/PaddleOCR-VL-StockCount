@@ -1,0 +1,26 @@
+# ==============================================================================
+# PaddleOCR-VL-1.6 Stock Count Studio - Dependencies
+# ==============================================================================
+
+# Web Framework & Server
+fastapi>=0.110.0
+uvicorn[standard]>=0.28.0
+pydantic>=2.0.0
+python-multipart>=0.0.9
+
+# Data Processing & Export
+numpy>=1.24.0
+pandas>=2.0.0
+openpyxl>=3.1.0
+Pillow>=10.0.0
+PyMuPDF>=1.23.0
+opencv-python>=4.8.0
+
+# PaddleOCR & PaddleX Core
+# Note: For GPU execution, install paddlepaddle-gpu instead of paddlepaddle:
+#   pip install paddlepaddle-gpu -i https://www.paddlepaddle.org.cn/packages/stable/cu118/
+# Or for CUDA 12.x:
+#   pip install paddlepaddle-gpu -i https://www.paddlepaddle.org.cn/packages/stable/cu123/
+paddlepaddle>=3.0.0b2
+paddlex>=3.0.0
+paddleocr>=2.8.0

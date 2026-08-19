@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PaddleOCR-VL-1.6 • Stock Count AI Studio</title>
+  <meta name="description" content="Hệ thống quét và bóc tách tài liệu kiểm kê kho (Stock Count) thông minh sử dụng mô hình PaddleOCR-VL-1.6 và giao diện AI Studio.">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Custom Styling -->
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div id="app-container" class="app-container">
+    <!-- Top Header -->
+    <header class="app-header" id="app-header">
+      <div class="header-left">
+        <div class="brand-logo">
+          <div class="logo-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M4 7V4H7M17 4H20V7M20 17V20H17M7 20H4V17" stroke="url(#logo-grad)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <rect x="7" y="7" width="10" height="10" rx="2" fill="url(#logo-grad-fill)" stroke="url(#logo-grad)" stroke-width="1.5"/>
+              <path d="M10 12H14M12 10V14" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round"/>
+              <defs>
+                <linearGradient id="logo-grad" x1="4" y1="4" x2="20" y2="20" gradientUnits="userSpaceOnUse">
+                  <stop stop-color="#38BDF8"/>
+                  <stop offset="0.5" stop-color="#3B82F6"/>
+                  <stop offset="1" stop-color="#8B5CF6"/>
+                </linearGradient>
+                <linearGradient id="logo-grad-fill" x1="7" y1="7" x2="17" y2="17" gradientUnits="userSpaceOnUse">
+                  <stop stop-color="#3B82F6" stop-opacity="0.3"/>
+                  <stop offset="1" stop-color="#8B5CF6" stop-opacity="0.3"/>
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+          <div class="brand-title">
+            <div class="brand-name">PaddleOCR-VL <span class="version-tag">v1.6</span></div>
+            <div class="brand-subtitle">Stock Count & Inventory Studio</div>
+          </div>
+        </div>
+
+        <div class="model-badge" title="Mô hình thị giác ngôn ngữ Vision-Language Model 0.9B SOTA Document Parsing">
+          <span class="status-pulse"></span>
+          <span class="badge-text">Model: <strong>PaddleOCR-VL-1.6</strong></span>
+          <span class="badge-chip">0.9B VLM</span>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <!-- Quick Sample Selector -->
+        <button id="btn-samples" class="btn btn-secondary" title="Chọn mẫu tài liệu kiểm kê có sẵn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/>
+            <path d="M6 6h10M6 10h10M6 14h6"/>
+          </svg>
+          <span>Tài Liệu Mẫu</span>
+        </button>
+
+        <!-- Upload File Button -->
+        <label for="file-upload-input" class="btn btn-primary" id="btn-upload-label">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="17 8 12 3 7 8"/>
+            <line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
+          <span>Quét Tài Liệu Mới</span>
+        </label>
+        <input type="file" id="file-upload-input" accept="image/*,application/pdf" style="display: none;">
+
+        <!-- Export Dropdown -->
+        <div class="dropdown-wrapper">
+          <button id="btn-export-dropdown" class="btn btn-emerald" disabled>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            <span>Xuất Dữ Liệu</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <div class="dropdown-menu" id="export-menu">
+            <a href="#" class="dropdown-item" id="export-excel-btn">
+              <span class="export-icon excel">📊</span>
+              <div>
+                <div class="item-title">Excel Spreadsheet (.xlsx)</div>
+                <div class="item-desc">Đầy đủ style màu sắc chênh lệch & công thức SUM</div>
+              </div>
+            </a>
+            <a href="#" class="dropdown-item" id="export-csv-btn">
+              <span class="export-icon csv">📄</span>
+              <div>
+                <div class="item-title">CSV UTF-8 (.csv)</div>
+                <div class="item-desc">Tương thích ERP, KiotViet, Sapo, SAP, Odoo</div>
+              </div>
+            </a>
+            <a href="#" class="dropdown-item" id="export-json-btn">
+              <span class="export-icon json">⚡</span>
+              <div>
+                <div class="item-title">Structured JSON (.json)</div>
+                <div class="item-desc">Dữ liệu phân cấp Metadata + Items + Coordinates</div>
+              </div>
+            </a>
+            <a href="#" class="dropdown-item" id="export-md-btn">
+              <span class="export-icon md">📑</span>
+              <div>
+                <div class="item-title">Markdown Table (.md)</div>
+                <div class="item-desc">Định dạng bảng Markdown chuẩn GitHub</div>
+              </div>
+            </a>
+          </div>
+        </div>
+
+        <!-- Theme Toggle -->
+        <button id="btn-theme" class="btn-icon" title="Đổi giao diện Sáng / Tối">
+          <svg id="theme-icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
+          </svg>
+          <svg id="theme-icon-sun" class="hidden" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="4"/>
+            <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Workspace (Dual Split Pane) -->
+    <main class="app-workspace" id="app-workspace">
+      
+      <!-- LEFT PANE: Document Visual Canvas -->
+      <section class="workspace-pane left-pane" id="left-pane">
+        <!-- Canvas Floating Control Bar -->
+        <div class="canvas-toolbar">
+          <div class="tool-group">
+            <button id="btn-zoom-in" class="tool-btn" title="Phóng to (+)">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+            </button>
+            <span id="zoom-level-text" class="tool-text">100%</span>
+            <button id="btn-zoom-out" class="tool-btn" title="Thu nhỏ (-)">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+            </button>
+            <button id="btn-fit-screen" class="tool-btn" title="Vừa màn hình">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+            </button>
+            <button id="btn-rotate" class="tool-btn" title="Xoay 90°">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+            </button>
+            <button id="btn-reset-view" class="tool-btn" title="Đặt lại góc nhìn">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+            </button>
+          </div>
+
+          <div class="tool-separator"></div>
+
+          <!-- Layer Toggles -->
+          <div class="layer-toggles">
+            <label class="toggle-chip active" id="toggle-boxes-chip" title="Bật/Tắt Bounding Box">
+              <input type="checkbox" id="toggle-boxes" checked>
+              <span class="chip-dot dot-green"></span>
+              <span class="chip-label">Bounding Boxes</span>
+            </label>
+            <label class="toggle-chip active" id="toggle-labels-chip" title="Bật/Tắt Text OCR Overlay">
+              <input type="checkbox" id="toggle-labels" checked>
+              <span class="chip-dot dot-blue"></span>
+              <span class="chip-label">OCR Text</span>
+            </label>
+            <label class="toggle-chip active" id="toggle-discrepancy-chip" title="Bật/Tắt Cảnh Báo Lệch Kho">
+              <input type="checkbox" id="toggle-discrepancy" checked>
+              <span class="chip-dot dot-red"></span>
+              <span class="chip-label">Cảnh Báo Lệch</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Canvas Container -->
+        <div class="canvas-viewport" id="canvas-viewport">
+          <!-- Empty State / Drag Drop Zone -->
+          <div class="canvas-dropzone" id="canvas-dropzone">
+            <div class="dropzone-card">
+              <div class="dropzone-icon">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="url(#drop-grad)" stroke-width="1.8">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                  <line x1="12" y1="18" x2="12" y2="12"/>
+                  <line x1="9" y1="15" x2="15" y2="15"/>
+                  <defs>
+                    <linearGradient id="drop-grad" x1="4" y1="2" x2="20" y2="22">
+                      <stop stop-color="#38BDF8"/>
+                      <stop offset="1" stop-color="#8B5CF6"/>
+                    </linearGradient>
+                  </defs>
+                </svg>
+              </div>
+              <h3 class="dropzone-title">Kéo & Thả Tài Liệu Stock Count Vào Đây</h3>
+              <p class="dropzone-hint">Hỗ trợ định dạng hình ảnh (PNG, JPG, WEBP) hoặc file tài liệu PDF nhiều trang</p>
+              <div class="dropzone-actions">
+                <button class="btn btn-primary" onclick="document.getElementById('file-upload-input').click()">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                  Tải Lên Từ Máy Tính
+                </button>
+                <button class="btn btn-secondary" id="btn-quick-sample-start">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/></svg>
+                  Thử Ngay Mẫu Có Sẵn
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Document Canvas Stage (Interactive Zoom / Pan / Overlays) -->
+          <div class="canvas-stage" id="canvas-stage">
+            <div class="canvas-transform" id="canvas-transform">
+              <img id="doc-image" class="doc-image" alt="Scanned Document">
+              <svg id="overlay-svg" class="overlay-svg"></svg>
+            </div>
+          </div>
+
+          <!-- Loading Spinner Overlay -->
+          <div class="loading-overlay hidden" id="loading-overlay">
+            <div class="loading-card">
+              <div class="spinner-ring"></div>
+              <div class="loading-title">PaddleOCR-VL-1.6 Đang Phân Tích...</div>
+              <div class="loading-subtitle">Bóc tách layout bảng biểu, đọc mã SKU và tính toán tồn kho</div>
+              <div class="loading-steps">
+                <div class="step-item active"><span>✓</span> Nhận diện Layout & Định hướng trang</div>
+                <div class="step-item active"><span>✓</span> OCR Vision-Language Model 0.9B</div>
+                <div class="step-item active"><span>⟳</span> Trích xuất bảng & Đối chiếu chênh lệch</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Multi-page PDF Carousel (If applicable) -->
+        <div class="pdf-pagination hidden" id="pdf-pagination">
+          <button id="btn-prev-page" class="tool-btn" disabled>‹</button>
+          <span id="page-counter" class="tool-text">Trang 1 / 1</span>
+          <button id="btn-next-page" class="tool-btn" disabled>›</button>
+        </div>
+      </section>
+
+      <!-- RIGHT PANE: Data Hub & Extraction Center -->
+      <section class="workspace-pane right-pane" id="right-pane">
+        
+        <!-- Metadata Header Card -->
+        <div class="meta-card" id="meta-card">
+          <div class="meta-header">
+            <div class="meta-title-block">
+              <span class="meta-tag">Thông Tin Đợt Kiểm Kê</span>
+              <h2 id="meta-doc-no" class="meta-doc-title">Chưa quét tài liệu</h2>
+            </div>
+            <div class="meta-status-badge" id="meta-status-badge">
+              <span class="status-indicator"></span>
+              <span id="meta-status-text">Sẵn sàng</span>
+            </div>
+          </div>
+
+          <div class="meta-grid">
+            <div class="meta-item">
+              <span class="meta-lbl">Kho Hàng:</span>
+              <span class="meta-val" id="meta-warehouse" contenteditable="true">-</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-lbl">Ngày Kiểm Kê:</span>
+              <span class="meta-val" id="meta-date" contenteditable="true">-</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-lbl">Người Kiểm Kê:</span>
+              <span class="meta-val" id="meta-auditor" contenteditable="true">-</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-lbl">Thời Gian Xử Lý:</span>
+              <span class="meta-val text-cyan" id="meta-latency">-</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- KPI Metrics Ribbon -->
+        <div class="kpi-ribbon" id="kpi-ribbon">
+          <div class="kpi-card">
+            <div class="kpi-val text-blue" id="kpi-total-skus">0</div>
+            <div class="kpi-label">Tổng SKU</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-val text-emerald" id="kpi-match-rate">0%</div>
+            <div class="kpi-label">Tỷ Lệ Khớp</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-val text-emerald" id="kpi-matched-skus">0</div>
+            <div class="kpi-label">SKU Khớp</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-val text-amber" id="kpi-surplus-units">0</div>
+            <div class="kpi-label">Thừa (Đơn vị)</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-val text-rose" id="kpi-deficit-units">0</div>
+            <div class="kpi-label">Thiếu (Đơn vị)</div>
+          </div>
+        </div>
+
+        <!-- Tab Controls -->
+        <div class="tabs-container">
+          <div class="tab-buttons">
+            <button class="tab-btn active" data-tab="tab-grid" id="tab-btn-grid">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg>
+              <span>Bảng Kiểm Kê</span>
+              <span class="tab-badge" id="tab-count-badge">0</span>
+            </button>
+            <button class="tab-btn" data-tab="tab-markdown" id="tab-btn-markdown">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+              <span>Markdown</span>
+            </button>
+            <button class="tab-btn" data-tab="tab-json" id="tab-btn-json">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+              <span>JSON Cấu Trúc</span>
+            </button>
+            <button class="tab-btn" data-tab="tab-blocks" id="tab-btn-blocks">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+              <span>Layout & OCR Blocks</span>
+            </button>
+          </div>
+
+          <!-- TAB 1: Stock Count Interactive Table -->
+          <div class="tab-content active" id="tab-grid">
+            <div class="table-toolbar">
+              <div class="search-box">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input type="text" id="table-search" placeholder="Tìm theo SKU, tên sản phẩm, vị trí...">
+              </div>
+
+              <div class="filter-pills">
+                <button class="filter-pill active" data-filter="ALL">Tất cả</button>
+                <button class="filter-pill pill-warning" data-filter="DISCREPANCY">⚠️ Chỉ Xem Lệch</button>
+                <button class="filter-pill pill-success" data-filter="MATCHED">✓ Khớp 100%</button>
+              </div>
+
+              <div class="table-actions">
+                <button class="btn btn-sm btn-secondary" id="btn-add-row" title="Thêm dòng kiểm kê mới">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  Thêm Dòng
+                </button>
+              </div>
+            </div>
+
+            <!-- Interactive Grid -->
+            <div class="table-wrapper">
+              <table class="data-table" id="stock-data-table">
+                <thead>
+                  <tr>
+                    <th style="width: 45px;">STT</th>
+                    <th style="width: 120px;">Mã SKU</th>
+                    <th style="min-width: 180px;">Tên Hàng Hóa</th>
+                    <th style="width: 70px;">ĐVT</th>
+                    <th style="width: 90px;">Vị Trí</th>
+                    <th style="width: 85px;" class="text-right">Tồn Sổ</th>
+                    <th style="width: 95px;" class="text-right">Thực Đếm</th>
+                    <th style="width: 95px;" class="text-right">Chênh Lệch</th>
+                    <th style="width: 125px;" class="text-center">Trạng Thái</th>
+                    <th style="width: 110px;">Mã Lô</th>
+                    <th style="width: 100px;">Hạn Dùng</th>
+                    <th style="min-width: 130px;">Ghi Chú</th>
+                    <th style="width: 50px;"></th>
+                  </tr>
+                </thead>
+                <tbody id="stock-table-body">
+                  <tr class="empty-row">
+                    <td colspan="13" class="text-center">Chưa có dữ liệu. Vui lòng tải lên tài liệu hoặc chọn mẫu để bắt đầu.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- TAB 2: Markdown View -->
+          <div class="tab-content" id="tab-markdown">
+            <div class="code-header">
+              <span>Định Dạng Markdown Chuẩn LLM / RAG</span>
+              <button class="btn btn-sm btn-secondary" id="btn-copy-md">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                Copy Markdown
+              </button>
+            </div>
+            <pre class="code-view" id="markdown-code-view">Chưa có dữ liệu Markdown.</pre>
+          </div>
+
+          <!-- TAB 3: Structured JSON View -->
+          <div class="tab-content" id="tab-json">
+            <div class="code-header">
+              <span>Cấu Trúc JSON Phân Cấp (Hierarchical JSON)</span>
+              <button class="btn btn-sm btn-secondary" id="btn-copy-json">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                Copy JSON
+              </button>
+            </div>
+            <pre class="code-view json-view" id="json-code-view">{}</pre>
+          </div>
+
+          <!-- TAB 4: Layout & Raw OCR Blocks -->
+          <div class="tab-content" id="tab-blocks">
+            <div class="table-wrapper">
+              <table class="data-table" id="blocks-table">
+                <thead>
+                  <tr>
+                    <th style="width: 50px;">#</th>
+                    <th style="width: 100px;">Loại Khối</th>
+                    <th style="width: 140px;">Tọa Độ [x1,y1,x2,y2]</th>
+                    <th style="width: 80px;">Độ Tin Cậy</th>
+                    <th>Nội Dung Text Đã Đọc</th>
+                  </tr>
+                </thead>
+                <tbody id="blocks-table-body">
+                  <tr class="empty-row"><td colspan="5" class="text-center">Chưa có khối OCR nào.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Quick Samples Modal -->
+  <div class="modal-backdrop hidden" id="samples-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="url(#modal-grad)" stroke-width="2">
+            <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/>
+            <path d="M6 6h10M6 10h10M6 14h6"/>
+            <defs>
+              <linearGradient id="modal-grad" x1="4" y1="2" x2="20" y2="22"><stop stop-color="#38BDF8"/><stop offset="1" stop-color="#8B5CF6"/></linearGradient>
+            </defs>
+          </svg>
+          <h3>Chọn Mẫu Tài Liệu Kiểm Kê Có Sẵn</h3>
+        </div>
+        <button class="modal-close" id="btn-close-modal">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <p class="modal-desc">Chọn 1 trong các mẫu thực tế dưới đây để kiểm tra ngay độ chính xác của mô hình <strong>PaddleOCR-VL-1.6</strong>:</p>
+        
+        <div class="samples-grid" id="samples-list-container">
+          <!-- Dynamically populated sample cards -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- Scripts -->
+  <script src="/static/app.js"></script>
+</body>
+</html>
